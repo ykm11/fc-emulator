@@ -20,15 +20,6 @@ type Header struct { // 16 bytes
     _ [5]byte
 }
 
-type Register struct {
-    A uint8 // Accumulator
-    X uint8 // Index Register
-    Y uint8 // Index Register
-    S uint8 // Stack Pointer
-    P uint8 // Status Register
-    PC uint16 // Program Counter
-}
-
 
 func readHeader(file *os.File) *Header {
     header := Header{}
