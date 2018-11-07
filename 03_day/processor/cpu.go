@@ -45,11 +45,54 @@ func (cpu *CPU) Reset() {
     cpu.PC = cpu.ReadWord(0xFFFC)
 }
 
-func (cpu *CPU) Nmi() {
+func (cpu *CPU) NMI() {
+    // Not Implemented
+    // but Partially
+
+    fmt.Println("[*] NMI Occured")
+
+    cpu.StackPush(uint8(cpu.PC >> 0x08)) // PC High
+    cpu.StackPush(uint8(cpu.PC & 0x08)) // PC Low
+    cpu.StackPush(cpu.P) // Status Register
+
+    cpu.ClearStatusRegister("break")
+    cpu.PC = cpu.ReadWord(0xFFFA)
 }
-func (cpu *CPU) Irq() {
+func (cpu *CPU) IRQ() {
+    // Not Implemented
+    // but Partially
+
+    if !cpu.GetStatusRegister("interrupt") {
+        fmt.Println("[*] IRQ Occuerd")
+
+        cpu.ClearStatusRegister("break")
+
+        cpu.StackPush(uint8(cpu.PC >> 0x08)) // PC High
+        cpu.StackPush(uint8(cpu.PC & 0x08)) // PC Low
+        cpu.StackPush(cpu.P) // Status Register
+
+        cpu.SetStatusRegister("interrupt")
+        cpu.PC = cpu.ReadWord(0xFFFE)
+    }
 }
-func (cpu *CPU) Brk() {
+func (cpu *CPU) BRK() {
+    // Not Implemented
+    // but Partially
+
+    if !cpu.GetStatusRegister("interrupt") {
+        fmt.Println("[*] BRK Occuerd")
+
+        cpu.SetStatusRegister("break")
+        cpu.SetStatusRegister("interrupt")
+        cpu.IncrementPC()
+
+        cpu.StackPush(uint8(cpu.PC >> 0x08)) // PC High
+        cpu.StackPush(uint8(cpu.PC & 0x08)) // PC Low
+        cpu.StackPush(cpu.P) // Status Register
+
+        cpu.PC = cpu.ReadWord(0xFFFE)
+    }
+
 }
 
 func (cpu *CPU) ReadByte(address uint16) uint8 {
@@ -79,8 +122,18 @@ func (cpu *CPU) IncrementPC() {
     }
 }
 
+func (cpu *CPU) StackPush(val uint8) {
+    fmt.Printf("[+] STACK PUSH -> SP : 0x%04x, val : 0x%02x\n", cpu.SP, val)
+    cpu.Memory[cpu.SP] = val
+    cpu.SP -= 1
+}
+func (cpu *CPU) StackPop() uint8 {
+    //fmt.Println("STACK POP")
+    cpu.SP += 1
+    return cpu.Memory[cpu.SP]
+}
 
-func (cpu CPU) GetStatusRegister(q string) bool {
+func (cpu *CPU) GetStatusRegister(q string) bool {
     switch q {
     case "carry":
         return (cpu.Registers.P & 0x01) != 0
@@ -102,3 +155,50 @@ func (cpu CPU) GetStatusRegister(q string) bool {
         panic("Unknown query")
     }
 }
+
+func (cpu *CPU) SetStatusRegister(q string) {
+    switch q {
+    case "carry":
+        cpu.P |= 0x01
+    case "zero":
+        cpu.P |= 0x02
+    case "interrupt":
+        cpu.P |= 0x04
+    case "decimal":
+        cpu.P |= 0x08
+    case "break":
+        cpu.P |= 0x10
+    case "reserved":
+        panic("Forbidden")
+    case "overflow":
+        cpu.P |= 0x40
+    case "negative":
+        cpu.P |= 0x80
+    default:
+        panic("Unknown query")
+    }
+}
+
+func (cpu *CPU) ClearStatusRegister(q string) {
+    switch q {
+    case "carry":
+        cpu.P &= 0xFE
+    case "zero":
+        cpu.P &= 0xFD
+    case "interrupt":
+        cpu.P &= 0xFC
+    case "decimal":
+        cpu.P &= 0xF7
+    case "break":
+        cpu.P &= 0xEF
+    case "reserved":
+        panic("Forbidden")
+    case "overflow":
+        cpu.P &= 0xCF
+    case "negative":
+        cpu.P &= 0x7F
+    default:
+        panic("Unknown query")
+    }
+}
+
