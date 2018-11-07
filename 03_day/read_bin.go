@@ -42,6 +42,11 @@ func main(){
     cpu.ShowRegister()
 
     cpu.MemoryMapping(programROM, 0x8000, 0x8000 + uint16(len(programROM)))
-    fmt.Printf("%x\n", cpu.Memory[0x8000 : 0x8100])
+    fmt.Printf("%X\n", cpu.Memory[0x8000 : 0x8100])
+
+    for j := 0; j < 0x10; j++ {
+        fmt.Printf("%02X ", cpu.Fetch())
+    }
+
 }
 
