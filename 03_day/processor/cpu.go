@@ -33,14 +33,16 @@ func (cpu *CPU) ShowRegister() { // For debugging
 func (cpu *CPU) Reset() {
     fmt.Println("[*] Register Reset")
 
+    cpu.Memory[0xFFFC] = 0x00
+    cpu.Memory[0xFFFD] = 0x80
+
     // Initialize Registers (default)
     cpu.A = 0x00
     cpu.X = 0x00
     cpu.Y = 0x00
     cpu.P = 0x39
     cpu.SP = 0x01FD
-    cpu.PC = 0x8000 // read 0xFFFC : 0x00, 0xFFFD : 0x80
-    // cpu.PC = (cpu.ReadByte(0xFFFD) << 0x08) | cpu.ReadByte(0xFFFC)
+    cpu.PC = cpu.ReadWord(0xFFFC)
 }
 
 func (cpu *CPU) Nmi() {
@@ -57,21 +59,23 @@ func (cpu *CPU) ReadWord(address uint16) uint16 { // Little Endian
     return uint16(cpu.Memory[address]) | (uint16(cpu.Memory[address+1]) << 0x08)
 }
 
-func (cpu *CPU) MemoryMapping(val []uint8, start, end uint16) {
-    var i uint16
-    for i = 0; i < end - start; i++ {
+func (cpu *CPU) MemoryMapping(val []uint8, start int) {
+    for i := 0; i < len(val); i++ {
         cpu.Memory[start + i] = val[i]
     }
 }
 
 func (cpu *CPU) Fetch() uint8 {
-    defer cpu.IncrementPC()
+    defer cpu.IncrementPC() // cannot use statement [cpu.PC++]
     return cpu.Memory[cpu.PC]
 }
 
 func (cpu *CPU) IncrementPC() {
     if cpu.PC < 0xFFFF {
         cpu.PC += 1
+    } else {
+        // Raise panic for now
+        panic("End of Memory")
     }
 }
 
