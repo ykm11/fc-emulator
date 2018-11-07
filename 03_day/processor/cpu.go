@@ -64,6 +64,18 @@ func (cpu *CPU) MemoryMapping(val []uint8, start, end uint16) {
     }
 }
 
+func (cpu *CPU) Fetch() uint8 {
+    defer cpu.IncrementPC()
+    return cpu.Memory[cpu.PC]
+}
+
+func (cpu *CPU) IncrementPC() {
+    if cpu.PC < 0xFFFF {
+        cpu.PC += 1
+    }
+}
+
+
 func (cpu CPU) GetStatusRegister(q string) bool {
     switch q {
     case "carry":
