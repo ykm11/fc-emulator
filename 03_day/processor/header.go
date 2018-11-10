@@ -54,5 +54,5 @@ func (header *Header) ShowHeader() {
     fmt.Printf("PRG RAM SIZE : %x\n", header.PRG_RAM_SIZE)
     fmt.Printf("Flags9 : %08b\n", header.Flags9)
     fmt.Printf("Flags10 : %08b\n", header.Flags10)
-    fmt.Println("---------Header---------\n")
+    fmt.Println("---------Header---------")
 }

@@ -26,7 +26,7 @@ func (cpu *CPU) ShowRegister() { // For debugging
     fmt.Printf("[+] Rsgister P  : 0b%08b\n", cpu.P)
     fmt.Printf("[+] Rsgister SP : 0x%04x\n", cpu.SP)
     fmt.Printf("[+] Rsgister PC : 0x%04x\n", cpu.PC)
-    fmt.Println("--------Registers-------\n")
+    fmt.Println("--------Registers-------")
 }
 
 func (cpu *CPU) RESET() {
