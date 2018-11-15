@@ -145,7 +145,6 @@ func (cpu *CPU) Run() {
         fmt.Printf("%02X ", opecode)
     }
     fmt.Println()
-
 }
 
 func (cpu *CPU) GetStatusRegister(q string) bool {

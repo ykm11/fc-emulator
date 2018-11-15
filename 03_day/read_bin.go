@@ -38,11 +38,13 @@ func main(){
 
     cpu := processor.CPU{
     }
-    cpu.Reset()
+    cpu.RESET()
     cpu.ShowRegister()
 
     cpu.MemoryMapping(programROM, 0x8000)
-    fmt.Printf("%X\n", cpu.Memory[0x8000 : 0x8100])
+    fmt.Printf("%X\n", cpu.Memory[0x8000 : 0x8080])
+
+    cpu.Run()
 
 }
 
