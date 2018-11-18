@@ -38,13 +38,7 @@ func (cpu *CPU) RESET() {
     cpu.Y = 0x00
     cpu.P = 0x39
     cpu.SP = 0x01FD
-
-    pc := cpu.ReadWord(0xFFFC)
-    if pc == 0x0000 {
-        cpu.PC = 0x8000
-    } else {
-        cpu.PC = pc
-    }
+    cpu.PC = cpu.ReadWord(0xFFFC)
 }
 
 func (cpu *CPU) NMI() {
@@ -145,7 +139,7 @@ func (cpu *CPU) StackPop() uint8 {
 }
 
 func (cpu *CPU) Run() {
-    for ; cpu.PC < 0xFFFF; { // とりあえず一生回しとけ
+    for ; cpu.PC < 0xFFFA; { // とりあえず一生回しとけ
         opecode := cpu.Fetch()
         fmt.Printf("%02X ", opecode)
     }
