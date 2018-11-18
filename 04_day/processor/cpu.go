@@ -32,16 +32,19 @@ func (cpu *CPU) ShowRegister() { // For debugging
 func (cpu *CPU) RESET() {
     fmt.Println("[*] RESET Occured")
 
-    cpu.Memory[0xFFFC] = 0x00
-    cpu.Memory[0xFFFD] = 0x80
-
     // Initialize Registers (default)
     cpu.A = 0x00
     cpu.X = 0x00
     cpu.Y = 0x00
     cpu.P = 0x39
     cpu.SP = 0x01FD
-    cpu.PC = cpu.ReadWord(0xFFFC)
+
+    pc := cpu.ReadWord(0xFFFC)
+    if pc == 0x0000 {
+        cpu.PC = 0x8000
+    } else {
+        cpu.PC = pc
+    }
 }
 
 func (cpu *CPU) NMI() {
