@@ -87,8 +87,9 @@ func (cpu *CPU) IncrementPC() {
 
 func (cpu *CPU) Run() {
     opecodes := GetInstructions()
+    var addrOrData uint16
 
-    for ; cpu.PC < 0xFFFA; { // とりあえず一生回しとけ
+    for ; cpu.PC < 0x9400; { // とりあえず一生回しとけ
         pc := cpu.PC
         code := cpu.Fetch()
         fmt.Printf("[+] PC, opecode : 0x%X, %X\n", pc, code)
@@ -96,80 +97,104 @@ func (cpu *CPU) Run() {
         opecode := opecodes[code]
         switch opecode.mode { // Partially
         case "accumulator":
-            fmt.Println("[*] Accumulator")
+            //fmt.Println("[*] Accumulator")
 
         case "immediate":
-            fmt.Println("[*] Immidiate")
-            data := cpu.Fetch()
-            fmt.Printf("[+] data : %X\n", data)
+            //fmt.Println("[*] Immidiate")
+            addrOrData = uint16(cpu.Fetch())
+            fmt.Printf("[+] data : %X\n", addrOrData)
 
         case "absolute":
-            fmt.Println("[*] Absolute")
+            //fmt.Println("[*] Absolute")
             low_address := cpu.Fetch()
             high_address := cpu.Fetch()
-            valid_add := uint16(high_address) << 0x08 | uint16(low_address)
+            addrOrData = uint16(high_address) << 0x08 | uint16(low_address)
             fmt.Printf("[+] High, Low : 0x%X 0x%X\n", high_address, low_address)
-            fmt.Printf("[+] Valid Address : 0x%X\n", valid_add)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "absoluteX":
-            fmt.Println("[*] AbsoluteX")
+            //fmt.Println("[*] AbsoluteX")
             low_address := cpu.Fetch()
             high_address := cpu.Fetch()
-            valid_add := uint16(high_address) << 0x08 | uint16(low_address) + uint16(cpu.X)
-            fmt.Printf("[+] Valid Address : 0x%X\n", valid_add)
+            addrOrData := uint16(high_address) << 0x08 | uint16(low_address) + uint16(cpu.X)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "absoluteY":
-            fmt.Println("[*] AbsoluteY")
+            //fmt.Println("[*] AbsoluteY")
             low_address := cpu.Fetch()
             high_address := cpu.Fetch()
-            valid_add := uint16(high_address) << 0x08 | uint16(low_address) + uint16(cpu.Y)
-            fmt.Printf("[+] Valid Address : 0x%X\n", valid_add)
+            addrOrData := uint16(high_address) << 0x08 | uint16(low_address) + uint16(cpu.Y)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "zeroPage":
-            fmt.Println("[*] ZeroPage")
+            //fmt.Println("[*] ZeroPage")
             low_address := cpu.Fetch()
-            fmt.Printf("[+] Low Address : 0x%X\n", low_address)
+            addrOrData = uint16(low_address)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "zeroPageX":
-            fmt.Println("[*] ZeroPageX")
+            //fmt.Println("[*] ZeroPageX")
             low_address := cpu.Fetch() + cpu.X
-            fmt.Printf("[+] Low Address : 0x%X\n", low_address)
+            addrOrData = uint16(low_address)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "zeroPageY":
-            fmt.Println("[*] ZeroPageY")
+            //fmt.Println("[*] ZeroPageY")
             low_address := cpu.Fetch() + cpu.Y
-            fmt.Printf("[+] Low Address : 0x%X\n", low_address)
+            addrOrData = uint16(low_address)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "implied":
-            fmt.Println("[*] Implied")
+            //fmt.Println("[*] Implied")
             // No address specification
 
         case "relative":
-            fmt.Println("[*] Relative")
-            offset := int8(cpu.Fetch())
-            fmt.Printf("[+] offset : %d\n", offset)
+            //fmt.Println("[*] Relative")
+            offset := cpu.Fetch()
+            addrOrData = uint16(offset)
+            fmt.Printf("[+] offset : %X\n", addrOrData)
 
         case "indexedIndirectX":
-            fmt.Println("[*] Indirect X")
-            low_address := cpu.Fetch()
-            fmt.Println(low_address)
+            //fmt.Println("[*] Indirect X")
+            low_address := cpu.Fetch() + cpu.X
+            addrOrData = uint16(low_address)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "indirectIndexedY":
-            fmt.Println("[*] Indirect Y")
-            low_address := cpu.Fetch()
-            fmt.Println(low_address)
+            //fmt.Println("[*] Indirect Y")
+            low_address := cpu.Fetch() + cpu.Y
+            addrOrData = uint16(low_address)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         case "absoluteIndirect":
-            fmt.Println("[*] Absolute Indirect")
+            //fmt.Println("[*] Absolute Indirect")
             low_address := cpu.Fetch()
             high_address := cpu.Fetch()
-            valid_add := uint16(high_address << 0x08) | uint16(low_address)
-            fmt.Println(valid_add)
+            addrOrData = uint16(high_address << 0x08) | uint16(low_address)
+            fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         default :
             fmt.Println("[*] Nothing to do")
+            addrOrData = 0x00
+            continue
         }
-        fmt.Println()
+        cpu.ExecInstruction(opecode.syntax, opecode.mode, addrOrData)
     }
 }
 
+func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
+    fmt.Printf("[+] Sybtax, Mode, AddrOrData : %s, %s, %X\n\n", syntax, mode, addrOrData)
+
+    switch syntax {
+    case "JMP":
+        cpu.PC = addrOrData
+    case "JSR":
+        cpu.PushPC()
+        cpu.PC = addrOrData
+    case "RTS":
+        cpu.PC = cpu.PopPC()
+        fmt.Printf("[+] Returned PC : %X\n", cpu.PC)
+    default :
+        return
+    }
+}

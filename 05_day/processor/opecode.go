@@ -238,7 +238,6 @@ func GetInstructions() map[uint8]Instruction {
 
     codes[0xEA] = Instruction{ mode:"implied", syntax:"NOP", clk:2 }
 
-
     return codes
 }
 

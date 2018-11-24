@@ -1,5 +1,9 @@
 package processor
 
+import (
+    "fmt"
+)
+
 type Registers struct {
     A uint8     // Accumulator
     X uint8     // Index Register
@@ -87,4 +91,15 @@ func (cpu *CPU) ClearStatusRegister(q string) {
     default:
         panic("Unknown query")
     }
+}
+
+func (cpu *CPU) PopPC() uint16 {
+    high_address := cpu.StackPop()
+    low_address := cpu.StackPop()
+    return uint16(high_address) << 0x08 | uint16(low_address)
+}
+
+func (cpu *CPU) PushPC(){
+    cpu.StackPush(uint8(cpu.PC & 0xFF))
+    cpu.StackPush(uint8(cpu.PC >> 0x08))
 }

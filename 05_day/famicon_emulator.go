@@ -38,5 +38,7 @@ func main(){
 
     cpu.RESET()
     cpu.ShowRegister()
+
+    cpu.Run()
 }
 
