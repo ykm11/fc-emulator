@@ -89,7 +89,7 @@ func (cpu *CPU) Run() {
     opecodes := GetInstructions()
     var addrOrData uint16
 
-    for ; cpu.PC < 0x9400; { // とりあえず一生回しとけ
+    for ; cpu.PC < 0xFFFE ; { // とりあえず一生回しとけ
         pc := cpu.PC
         code := cpu.Fetch()
         fmt.Printf("[+] PC, opecode : 0x%X, %X\n", pc, code)
@@ -174,8 +174,7 @@ func (cpu *CPU) Run() {
             fmt.Printf("[+] Valid Address : 0x%X\n", addrOrData)
 
         default :
-            fmt.Println("[*] Nothing to do")
-            addrOrData = 0x00
+            fmt.Println("[*] Not Implemented Instruction\n")
             continue
         }
         cpu.ExecInstruction(opecode.syntax, opecode.mode, addrOrData)
@@ -186,14 +185,213 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
     fmt.Printf("[+] Sybtax, Mode, AddrOrData : %s, %s, %X\n\n", syntax, mode, addrOrData)
 
     switch syntax {
+    // ロード
+    case "LDA":
+        if mode == "immediate" {
+            cpu.A = uint8(addrOrData & 0xFF)
+        } else {
+            cpu.A = cpu.ReadByte(addrOrData)
+        }
+
+        if cpu.A & 0x80 == 0 {
+            cpu.SetStatusRegister("N")
+        } else {
+            cpu.ClearStatusRegister("N")
+        }
+
+        if cpu.A == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+
+    case "LDX":
+        if mode == "immediate" {
+            cpu.X = uint8(addrOrData & 0xFF)
+        } else {
+            cpu.X = cpu.ReadByte(addrOrData)
+        }
+
+        if cpu.X & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+
+        if cpu.X == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+
+    case "LDY":
+        if mode == "immediate" {
+            cpu.Y = uint8(addrOrData & 0xFF)
+        } else {
+            cpu.Y = cpu.ReadByte(addrOrData)
+        }
+
+        if cpu.Y & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+
+        if cpu.Y == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+
+
+    // ストア
+    case "STA":
+        cpu.WriteByte(addrOrData, cpu.A)
+
+    case "STX":
+        cpu.WriteByte(addrOrData, cpu.X)
+
+    case "STY":
+        cpu.WriteByte(addrOrData, cpu.Y)
+
+    // 比較
+    case "CMP":
+    case "CPX":
+    case "CPY":
+
+    // 条件分岐
+    case "BCC":
+        if !cpu.GetStatusRegister("C") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+    case "BCS":
+        if cpu.GetStatusRegister("C") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+
+    case "BNE":
+        if !cpu.GetStatusRegister("Z") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+    case "BEQ":
+        if cpu.GetStatusRegister("Z") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+
+    case "BVC":
+        if !cpu.GetStatusRegister("V") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+    case "BVS":
+        if cpu.GetStatusRegister("V") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+
+    case "BPL":
+        if !cpu.GetStatusRegister("N") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+    case "BMI":
+        if cpu.GetStatusRegister("N") {
+            if addrOrData % 0x80 == 0 {
+                cpu.PC += (addrOrData & 0xFF)
+            } else {
+                cpu.PC -= (0x100 - (addrOrData & 0xFF))
+            }
+        }
+
+
+    // フラグ操作
+    case "CLC":
+        cpu.ClearStatusRegister("C")
+    case "SEC":
+        cpu.SetStatusRegister("C")
+
+    case "CLI":
+        cpu.ClearStatusRegister("I")
+    case "SEI":
+        cpu.SetStatusRegister("I")
+
+    case "CLD":
+        cpu.ClearStatusRegister("D")
+    case "SED":
+        cpu.SetStatusRegister("D")
+
+    case "CLV":
+        cpu.ClearStatusRegister("V")
+
+    // スタック操作
+    case "PHA":
+        cpu.StackPush(cpu.A)
+
+    case "PHP":
+        cpu.StackPush(cpu.P)
+        cpu.SetStatusRegister("B")
+
+    case "PLA":
+        cpu.A = cpu.StackPop()
+
+        if cpu.A & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+
+        if cpu.A == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+
+    case "PLP":
+        cpu.P = cpu.StackPop()
+
+    // ジャンプ命令
     case "JMP":
         cpu.PC = addrOrData
+
     case "JSR":
         cpu.PushPC()
         cpu.PC = addrOrData
+
     case "RTS":
         cpu.PC = cpu.PopPC()
         fmt.Printf("[+] Returned PC : %X\n", cpu.PC)
+
+    // 割り込み
+    case "BRK":
+        cpu.BRK()
+
+    // 何もない
+    case "NOP":
     default :
         return
     }
