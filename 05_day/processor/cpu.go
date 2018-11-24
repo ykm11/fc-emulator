@@ -2,6 +2,7 @@ package processor
 
 import (
     "fmt"
+    "../utils"
 )
 
 type CPU struct {
@@ -98,6 +99,7 @@ func (cpu *CPU) Run() {
         switch opecode.mode { // Partially
         case "accumulator":
             //fmt.Println("[*] Accumulator")
+            addrOrData = 0
 
         case "immediate":
             //fmt.Println("[*] Immidiate")
@@ -147,6 +149,7 @@ func (cpu *CPU) Run() {
         case "implied":
             //fmt.Println("[*] Implied")
             // No address specification
+            addrOrData = 0
 
         case "relative":
             //fmt.Println("[*] Relative")
@@ -256,13 +259,81 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
 
     // 比較
     case "CMP":
+        var data uint8
+        if mode == "immediate" {
+            data = uint8(addrOrData & 0xFF)
+        } else {
+            data = cpu.ReadByte(addrOrData)
+        }
+
+        cmp := utils.Compare(cpu.A, data)
+        fmt.Printf("[+] A, M, cmp : %d, %d, %d\n", cpu.A, data, cmp)
+        if cmp == -1 {
+            cpu.SetStatusRegister("N")
+            cpu.ClearStatusRegister("C")
+            cpu.ClearStatusRegister("Z")
+        } else if cmp == 1 {
+            cpu.SetStatusRegister("C")
+            cpu.ClearStatusRegister("N")
+            cpu.ClearStatusRegister("Z")
+        } else {
+            cpu.SetStatusRegister("C")
+            cpu.SetStatusRegister("Z")
+            cpu.ClearStatusRegister("N")
+        }
+
     case "CPX":
+        var data uint8
+        if mode == "immediate" {
+            data = uint8(addrOrData & 0xFF)
+        } else {
+            data = cpu.ReadByte(addrOrData)
+        }
+
+        cmp := utils.Compare(cpu.X, data)
+        fmt.Printf("[+] X, M, cmp : %d, %d, %d\n", cpu.X, data, cmp)
+        if cmp == -1 {
+            cpu.SetStatusRegister("N")
+            cpu.ClearStatusRegister("C")
+            cpu.ClearStatusRegister("Z")
+        } else if cmp == 1 {
+            cpu.SetStatusRegister("C")
+            cpu.ClearStatusRegister("N")
+            cpu.ClearStatusRegister("Z")
+        } else {
+            cpu.SetStatusRegister("C")
+            cpu.SetStatusRegister("Z")
+            cpu.ClearStatusRegister("N")
+        }
+
     case "CPY":
+        var data uint8
+        if mode == "immediate" {
+            data = uint8(addrOrData & 0xFF)
+        } else {
+            data = cpu.ReadByte(addrOrData)
+        }
+
+        cmp := utils.Compare(cpu.Y, data)
+        fmt.Printf("[+] Y, M, cmp : %d, %d, %d\n", cpu.Y, data, cmp)
+        if cmp == -1 {
+            cpu.SetStatusRegister("N")
+            cpu.ClearStatusRegister("C")
+            cpu.ClearStatusRegister("Z")
+        } else if cmp == 1 {
+            cpu.SetStatusRegister("C")
+            cpu.ClearStatusRegister("N")
+            cpu.ClearStatusRegister("Z")
+        } else {
+            cpu.SetStatusRegister("C")
+            cpu.SetStatusRegister("Z")
+            cpu.ClearStatusRegister("N")
+        }
 
     // 条件分岐
     case "BCC":
         if !cpu.GetStatusRegister("C") {
-            if addrOrData % 0x80 == 0 {
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
@@ -270,7 +341,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
         }
     case "BCS":
         if cpu.GetStatusRegister("C") {
-            if addrOrData % 0x80 == 0 {
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
@@ -279,15 +350,17 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
 
     case "BNE":
         if !cpu.GetStatusRegister("Z") {
-            if addrOrData % 0x80 == 0 {
+            fmt.Printf("[+] BNE PC : %X\n", cpu.PC)
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
             }
+            fmt.Printf("[+] BNE PC : %X\n", cpu.PC)
         }
     case "BEQ":
         if cpu.GetStatusRegister("Z") {
-            if addrOrData % 0x80 == 0 {
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
@@ -296,7 +369,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
 
     case "BVC":
         if !cpu.GetStatusRegister("V") {
-            if addrOrData % 0x80 == 0 {
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
@@ -304,7 +377,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
         }
     case "BVS":
         if cpu.GetStatusRegister("V") {
-            if addrOrData % 0x80 == 0 {
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
@@ -313,7 +386,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
 
     case "BPL":
         if !cpu.GetStatusRegister("N") {
-            if addrOrData % 0x80 == 0 {
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
@@ -321,7 +394,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
         }
     case "BMI":
         if cpu.GetStatusRegister("N") {
-            if addrOrData % 0x80 == 0 {
+            if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
@@ -352,11 +425,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
     case "PHA":
         cpu.StackPush(cpu.A)
 
-    case "PHP":
-        cpu.StackPush(cpu.P)
-        cpu.SetStatusRegister("B")
-
-    case "PLA":
+   case "PLA":
         cpu.A = cpu.StackPop()
 
         if cpu.A & 0x80 == 0 {
@@ -370,6 +439,10 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
         } else {
             cpu.ClearStatusRegister("Z")
         }
+
+    case "PHP":
+        cpu.StackPush(cpu.P)
+        cpu.SetStatusRegister("B")
 
     case "PLP":
         cpu.P = cpu.StackPop()
