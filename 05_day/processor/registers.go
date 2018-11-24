@@ -96,10 +96,12 @@ func (cpu *CPU) ClearStatusRegister(q string) {
 func (cpu *CPU) PopPC() uint16 {
     high_address := cpu.StackPop()
     low_address := cpu.StackPop()
+    fmt.Printf("[+] POP PC (high, low) : %X, %X\n", high_address, low_address)
     return uint16(high_address) << 0x08 | uint16(low_address)
 }
 
 func (cpu *CPU) PushPC(){
+    fmt.Printf("[+] PUSH PC : %X\n", cpu.PC)
     cpu.StackPush(uint8(cpu.PC & 0xFF))
     cpu.StackPush(uint8(cpu.PC >> 0x08))
 }

@@ -98,3 +98,20 @@ func TestMemoryWrite(t *testing.T) {
         t.Fatal("Memory[0x1145] should be 0x45")
     }
 }
+
+func TestStack(t *testing.T) {
+    cpu := processor.CPU{}
+
+    cpu.PC = 0xDEAD
+    cpu.PushPC()
+    cpu.PC = 0xBEEF
+    cpu.PushPC()
+
+    if cpu.PopPC() != 0xBEEF {
+        t.Fatal("PC should be 0xBEEF")
+    }
+    if cpu.PopPC() != 0xDEAD {
+        t.Fatal("PC should be 0xDEAD")
+    }
+
+}
