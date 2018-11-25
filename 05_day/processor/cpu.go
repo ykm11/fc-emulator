@@ -401,6 +401,85 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
             }
         }
 
+    // インクリメント, デクリメント
+    case "INC":
+        fmt.Printf("\t[+] INC Address, data : %X, %X\n", addrOrData, cpu.ReadByte(addrOrData))
+        data := (cpu.ReadByte(addrOrData) + 1) & 0xFF
+        if data & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+        if data == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+        cpu.WriteByte(addrOrData, data)
+    case "DEC":
+        fmt.Printf("\t[+] DEC Address, data : %X, %X\n", addrOrData, cpu.ReadByte(addrOrData))
+        data := (cpu.ReadByte(addrOrData) - 1) & 0xFF
+        if data & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+        if data == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+        cpu.WriteByte(addrOrData, data)
+
+    case "INX":
+        cpu.X += 1
+        if cpu.X & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+        if cpu.X == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+    case "DEX":
+        cpu.X -= 1
+        if cpu.X & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+        if cpu.X == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+
+    case "INY":
+        cpu.Y += 1
+        if cpu.X & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+        if cpu.Y == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
+    case "DEY":
+        cpu.Y -= 1
+        if cpu.Y & 0x80 == 0 {
+            cpu.ClearStatusRegister("N")
+        } else {
+            cpu.SetStatusRegister("N")
+        }
+        if cpu.Y == 0 {
+            cpu.SetStatusRegister("Z")
+        } else {
+            cpu.ClearStatusRegister("Z")
+        }
 
     // フラグ操作
     case "CLC":
@@ -424,8 +503,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
     // スタック操作
     case "PHA":
         cpu.StackPush(cpu.A)
-
-   case "PLA":
+    case "PLA":
         cpu.A = cpu.StackPop()
 
         if cpu.A & 0x80 == 0 {
@@ -443,7 +521,6 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
     case "PHP":
         cpu.StackPush(cpu.P)
         cpu.SetStatusRegister("B")
-
     case "PLP":
         cpu.P = cpu.StackPop()
 
