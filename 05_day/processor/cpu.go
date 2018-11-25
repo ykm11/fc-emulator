@@ -267,7 +267,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
         }
 
         cmp := utils.Compare(cpu.A, data)
-        fmt.Printf("[+] A, M, cmp : %d, %d, %d\n", cpu.A, data, cmp)
+        fmt.Printf("\t[+] A, M, cmp : %d, %d, %d\n", cpu.A, data, cmp)
         if cmp == -1 {
             cpu.SetStatusRegister("N")
             cpu.ClearStatusRegister("C")
@@ -291,7 +291,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
         }
 
         cmp := utils.Compare(cpu.X, data)
-        fmt.Printf("[+] X, M, cmp : %d, %d, %d\n", cpu.X, data, cmp)
+        fmt.Printf("\t[+] X, M, cmp : %d, %d, %d\n", cpu.X, data, cmp)
         if cmp == -1 {
             cpu.SetStatusRegister("N")
             cpu.ClearStatusRegister("C")
@@ -350,13 +350,11 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
 
     case "BNE":
         if !cpu.GetStatusRegister("Z") {
-            fmt.Printf("[+] BNE PC : %X\n", cpu.PC)
             if addrOrData & 0x80 == 0 {
                 cpu.PC += (addrOrData & 0xFF)
             } else {
                 cpu.PC -= (0x100 - (addrOrData & 0xFF))
             }
-            fmt.Printf("[+] BNE PC : %X\n", cpu.PC)
         }
     case "BEQ":
         if cpu.GetStatusRegister("Z") {
@@ -534,7 +532,7 @@ func (cpu *CPU) ExecInstruction(syntax, mode string, addrOrData uint16) {
 
     case "RTS":
         cpu.PC = cpu.PopPC()
-        fmt.Printf("[+] Returned PC : %X\n", cpu.PC)
+        fmt.Printf("\t[+] Returned PC : %X\n", cpu.PC)
 
     // 割り込み
     case "BRK":
